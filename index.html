@@ -462,7 +462,7 @@ const appId = FIREBASE_CONFIG.appId;
     await getDoc(doc(db, DOC_PATH));
 
     // Save config
-    localStorage.setItem(CFG_KEY, JSON.stringify({apiKey, projectId, appId}));
+    // config is hardcoded
     document.getElementById('setup-screen').classList.add('hidden');
 
     startSync();
