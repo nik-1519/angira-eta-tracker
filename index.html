@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angira Ventures · ETA Milestone Tracker</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B2A4A;--teal:#0D6E6E;--accent:#2563EB;
+  --p1:#1B2A4A;--p2:#0D6E6E;--p3:#2563EB;--p4:#7C3AED;--p5:#BE185D;--p6:#B45309;
+  --bg:#F7F6F2;--surface:#FFFFFF;--surface2:#F3F4F6;
+  --border:#E5E7EB;--border2:#D1D5DB;
+  --text:#111827;--text2:#374151;--text3:#6B7280;
+  --green:#059669;--green-bg:#D1FAE5;--green-text:#065F46;
+  --amber:#D97706;--amber-bg:#FEF3C7;--amber-text:#92400E;
+  --red:#DC2626;--red-bg:#FEE2E2;--red-text:#991B1B;
+  --radius:8px;--radius-lg:12px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --mono:'SF Mono','Fira Code','Cascadia Code',monospace;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px}
+#setup-screen.hidden{display:none}
+.setup-box{background:#fff;border-radius:16px;padding:32px;max-width:480px;width:100%}
+.setup-logo{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.setup-title{font-size:22px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.setup-sub{font-size:14px;color:var(--text2);margin-bottom:24px;line-height:1.5}
+.setup-steps{background:var(--bg);border-radius:var(--radius);padding:16px;margin-bottom:20px}
+.setup-step{display:flex;gap:10px;margin-bottom:12px;font-size:13px;color:var(--text2);line-height:1.4}
+.setup-step:last-child{margin-bottom:0}
+.step-n{background:var(--navy);color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.setup-step a{color:var(--accent);text-decoration:none}
+.setup-step a:hover{text-decoration:underline}
+.setup-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.setup-input{width:100%;font-size:13px;font-family:var(--mono);border:1px solid var(--border2);border-radius:var(--radius);padding:10px 12px;outline:none;margin-bottom:8px;color:var(--text)}
+.setup-input:focus{border-color:var(--accent)}
+.setup-btn{width:100%;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);padding:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
+.setup-btn:hover{background:#253660}
+.setup-err{font-size:12px;color:var(--red);margin-top:6px;display:none}
+
+/* ── HEADER ── */
+.hdr{background:var(--navy);padding:24px 32px 20px}
+.hdr-inner{max-width:1200px;margin:0 auto}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
+.hdr-eye{font-family:var(--mono);font-size:10px;letter-spacing:0.14em;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:6px}
+.hdr-title{font-size:clamp(18px,2.5vw,26px);font-weight:600;color:#fff;line-height:1.2}
+.hdr-sub{font-size:13px;color:rgba(255,255,255,0.4);margin-top:4px}
+.hdr-right{text-align:right;flex-shrink:0}
+.hdr-pct{font-family:var(--mono);font-size:clamp(32px,5vw,48px);font-weight:600;color:#fff;line-height:1}
+.hdr-pct-sub{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:20px}
+.stat{background:rgba(255,255,255,0.09);border-radius:var(--radius);padding:12px 14px}
+.stat-n{font-family:var(--mono);font-size:26px;font-weight:600;color:#fff;line-height:1}
+.stat-l{font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px}
+.prog-wrap{margin-top:18px}
+.prog-labs{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.35);margin-bottom:6px}
+.prog-track{height:5px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--teal);border-radius:3px;transition:width 0.6s ease}
+
+/* ── SYNC BAR ── */
+.sync-bar{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 32px}
+.sync-bar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:8px}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background 0.3s}
+.sdot.ok{background:var(--green)}.sdot.busy{background:var(--amber)}.sdot.err{background:var(--red)}
+.stxt{font-size:12px;color:var(--text3);flex:1}
+.stime{font-family:var(--mono);font-size:11px;color:var(--text3)}
+.recfg-btn{font-family:var(--mono);font-size:10px;padding:3px 9px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer}
+.recfg-btn:hover{border-color:var(--text2);color:var(--text2)}
+
+/* ── TOOLBAR ── */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 32px;position:sticky;top:0;z-index:100}
+.toolbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fbtn{font-family:var(--mono);font-size:11px;letter-spacing:0.06em;padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all 0.15s}
+.fbtn:hover{background:var(--surface2);border-color:var(--text3)}
+.fbtn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.rbtn{margin-left:auto;font-family:var(--mono);font-size:11px;padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all 0.15s}
+.rbtn:hover{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* ── CONTENT ── */
+.content{max-width:1200px;margin:0 auto;padding:20px 32px;display:flex;flex-direction:column;gap:12px}
+
+/* ── PHASE CARD ── */
+.pcard{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,0.06)}
+.phdr{padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:12px;user-select:none}
+.phdr:hover{filter:brightness(1.08)}
+.pbadge{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.8);flex-shrink:0;font-weight:600}
+.pinfo{flex:1;min-width:0}
+.pname{font-size:15px;font-weight:600;color:#fff;line-height:1.3}
+.pmeta{font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px}
+.pright{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.pcnt{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,0.65)}
+.chv{font-size:12px;color:rgba(255,255,255,0.45);transition:transform 0.2s}
+.chv.o{transform:rotate(180deg)}
+.pbody{background:var(--surface)}
+.sgrp{border-bottom:1px solid var(--border)}
+.sgrp:last-child{border-bottom:none}
+.shdr{padding:9px 20px;background:var(--surface2);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.shdr:hover{background:#EAECEF}
+.sbadge{font-family:var(--mono);font-size:9px;color:var(--text3);background:var(--border2);padding:2px 7px;border-radius:4px;flex-shrink:0;font-weight:600}
+.sname{font-size:12px;font-weight:600;color:var(--text2);flex:1}
+.scnt{font-family:var(--mono);font-size:11px;color:var(--text3);margin-left:auto}
+.schv{font-size:11px;color:var(--text3);transition:transform 0.2s}
+.schv.o{transform:rotate(180deg)}
+
+/* ── TASK ── */
+.task{border-bottom:1px solid rgba(229,231,235,0.6);transition:background 0.1s}
+.task:last-child{border-bottom:none}
+.task:hover{background:#FAFAFA}
+.task.dn{background:var(--green-bg)}.task.dn:hover{background:#C6F6E4}
+.task.ov:not(.dn){background:var(--red-bg)}.task.ov:not(.dn):hover{background:#FCA5A5}
+.task-main{display:flex;align-items:flex-start;gap:12px;padding:12px 20px 8px}
+.task-ctrls{display:flex;align-items:center;gap:12px;padding:0 20px 12px;padding-left:52px}
+.chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;background:var(--surface);transition:all 0.15s}
+.chk:hover{border-color:var(--teal)}
+.chk.on{background:var(--green);border-color:var(--green)}
+.chk svg{display:none;width:13px;height:13px;stroke:#fff;stroke-width:2.5;fill:none}
+.chk.on svg{display:block}
+.tbody{flex:1;min-width:0}
+.tlbl{font-size:14px;font-weight:500;color:var(--text);line-height:1.35}
+.task.dn .tlbl{text-decoration:line-through;color:var(--text3)}
+.tnote{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.5}
+.pri{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.ph{background:var(--red)}.pm{background:var(--amber)}.pl{background:var(--green)}
+.ctrl-grp{display:flex;flex-direction:column;gap:3px;flex-shrink:0}
+.clbl{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em}
+.tdate{font-size:12px;font-family:var(--mono);border:1px solid var(--border2);border-radius:6px;padding:5px 9px;background:var(--surface);color:var(--text);outline:none;cursor:pointer;transition:border-color 0.15s;min-width:140px}
+.tdate:focus,.tdate:hover{border-color:var(--teal)}
+.tdate.ov-date{border-color:var(--red);color:var(--red)}
+.tsel{font-size:12px;font-family:var(--mono);border:1px solid var(--border2);border-radius:6px;padding:5px 9px;background:var(--surface);color:var(--text);outline:none;cursor:pointer;transition:all 0.15s;min-width:140px}
+.s-not-started{color:var(--text3)}
+.s-in-progress{color:var(--amber-text);background:var(--amber-bg);border-color:var(--amber)}
+.s-complete{color:var(--green-text);background:var(--green-bg);border-color:var(--green)}
+.s-blocked{color:var(--red-text);background:var(--red-bg);border-color:var(--red)}
+.empty{padding:24px 20px;font-size:14px;color:var(--text3);font-style:italic;text-align:center}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .hdr{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+  .stat{padding:10px 12px}.stat-n{font-size:22px}
+  .sync-bar{padding:7px 16px}
+  .toolbar{padding:10px 16px}
+  .toolbar-inner{gap:6px}
+  .fbtn{font-size:10px;padding:5px 11px}
+  .rbtn{margin-left:0;margin-top:4px}
+  .content{padding:12px 16px}
+  .task-main{padding:12px 16px 8px}
+  .task-ctrls{flex-direction:column;align-items:flex-start;gap:8px;padding:0 16px 12px;padding-left:50px}
+  .ctrl-grp{width:100%}
+  .tdate,.tsel{width:100%;min-width:0}
+  .phdr{padding:13px 16px}
+  .shdr{padding:8px 16px}
+}
+@media(max-width:480px){
+  .hdr-pct{font-size:28px}
+  .stats{gap:6px}
+}
+@media(min-width:769px){
+  .task-ctrls{display:flex;flex-direction:row;align-items:center;gap:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-logo">Angira Ventures · ETA Tracker</div>
+    <div class="setup-title">Connect to Firebase</div>
+    <div class="setup-sub">Enter your Firebase config once — your progress will sync instantly across all devices.</div>
+    <div class="setup-steps">
+      <div class="setup-step"><div class="step-n">1</div><div>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> and create a project (any name, disable Analytics if asked).</div></div>
+      <div class="setup-step"><div class="step-n">2</div><div>Click <strong>Firestore Database</strong> in the left menu → <strong>Create database</strong> → choose <strong>Start in test mode</strong> → pick any region → Done.</div></div>
+      <div class="setup-step"><div class="step-n">3</div><div>Click the gear icon → <strong>Project settings</strong> → scroll to <strong>Your apps</strong> → click the <strong>&lt;/&gt;</strong> web icon → register app → copy the <code>firebaseConfig</code> values below.</div></div>
+    </div>
+    <div class="setup-label">API Key</div>
+    <input class="setup-input" id="cfg-apikey" placeholder="AIzaSy...">
+    <div class="setup-label">Project ID</div>
+    <input class="setup-input" id="cfg-projectid" placeholder="my-project-12345">
+    <div class="setup-label">App ID</div>
+    <input class="setup-input" id="cfg-appid" placeholder="1:123456789:web:abc123">
+    <div id="setup-err" class="setup-err">Could not connect — check your values and make sure Firestore is in Test Mode.</div>
+    <button class="setup-btn" onclick="connectFirebase()">Connect &amp; Start Tracking</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="hdr">
+  <div class="hdr-inner">
+    <div class="hdr-top">
+      <div>
+        <div class="hdr-eye">Angira Ventures &middot; ETA Program</div>
+        <div class="hdr-title">Acquisition Playbook<br>Milestone Tracker</div>
+        <div class="hdr-sub">Self-funded B2B acquisition &middot; 2033 liquidity target</div>
+      </div>
+      <div class="hdr-right">
+        <div class="hdr-pct" id="pct">0%</div>
+        <div class="hdr-pct-sub" id="tof">0 / 108 tasks</div>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="sd">0</div><div class="stat-l">Complete</div></div>
+      <div class="stat"><div class="stat-n" id="sp">0</div><div class="stat-l">In Progress</div></div>
+      <div class="stat"><div class="stat-n" id="so">0</div><div class="stat-l">Overdue</div></div>
+      <div class="stat"><div class="stat-n" id="sb">0</div><div class="stat-l">Blocked</div></div>
+    </div>
+    <div class="prog-wrap">
+      <div class="prog-labs"><span>Phase 1: Foundation</span><span>Phase 6: Exit &amp; Scale</span></div>
+      <div class="prog-track"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-bar-inner">
+    <div class="sdot" id="dot"></div>
+    <div class="stxt" id="stx">Connecting...</div>
+    <div class="stime" id="stm"></div>
+    <button class="recfg-btn" onclick="showSetup()" title="Reconfigure Firebase">Reconfigure</button>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="toolbar-inner">
+    <button class="fbtn on" onclick="sf('all',this)">All</button>
+    <button class="fbtn" onclick="sf('in-progress',this)">In Progress</button>
+    <button class="fbtn" onclick="sf('not-started',this)">Not Started</button>
+    <button class="fbtn" onclick="sf('complete',this)">Complete</button>
+    <button class="fbtn" onclick="sf('blocked',this)">Blocked</button>
+    <button class="fbtn" onclick="sf('overdue',this)">Overdue</button>
+    <button class="rbtn" onclick="doReset()">Reset all</button>
+  </div>
+</div>
+
+<div class="content" id="app"></div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── TASK DATA ─────────────────────────────────────────────────────────────────
+const PH = [
+  {id:'p1',lb:'Phase 1',nm:'Foundation & Infrastructure',cl:'#1B2A4A',mt:'Months 1-2 · 5-8 hrs/wk',steps:[
+    {id:'s1a',lb:'1.1',nm:'Entity Structure & Legal',tasks:[
+      {id:'t001',lb:'Engage M&A attorney (sub-$5M specialist)',nt:'Budget $5K-$15K. Ask ETA community at smbash.com for referrals.',p:'h'},
+      {id:'t002',lb:'Confirm Angira Ventures LLC holding structure',nt:'Verify WY or DE domicile. Review operating agreement for acquisition flexibility.',p:'h'},
+      {id:'t003',lb:'Draft subsidiary LLC template with attorney',nt:'Each acquisition = [BizName] LLC wholly owned by Angira Ventures.',p:'m'},
+      {id:'t004',lb:'Open dedicated Angira Ventures checking account',nt:'Mercury or Relay. 100% separate from personal accounts.',p:'h'},
+      {id:'t005',lb:'Set up QuickBooks Online for Angira Ventures',nt:'Track all search expenses - legitimate business costs.',p:'m'},
+      {id:'t006',lb:'Obtain D-U-N-S number for Angira Ventures',nt:'Free via Dun & Bradstreet. Takes 1-2 weeks. Builds business credit.',p:'l'},
+    ]},
+    {id:'s1b',lb:'1.2',nm:'Define Your Buy Box',tasks:[
+      {id:'t007',lb:'Write 1-page buy box document',nt:'Industry, revenue range, SDE target, TX geography, GM Shield requirement.',p:'h'},
+      {id:'t008',lb:'Define hard no-go criteria in writing',nt:'>20% customer concentration, no seller note, heavy WA labor = deal-killers.',p:'h'},
+      {id:'t009',lb:'Research and rank 3 priority target industries',nt:'Managed IT, B2B staffing (TX), accounting/bookkeeping recommended.',p:'m'},
+    ]},
+    {id:'s1c',lb:'1.3',nm:'Deal Flow Infrastructure',tasks:[
+      {id:'t010',lb:'Create BizBuySell saved search with daily alerts',nt:'Filter by buy box. Free.',p:'h'},
+      {id:'t011',lb:'Build Apollo.io prospect list (200+ contacts)',nt:'Owners 50+, target industries, TX geography, company age 10+ yrs.',p:'h'},
+      {id:'t012',lb:'Register buyer profile on Axial.net',nt:'Include buy box precisely. Brokers search buyer profiles for new listings.',p:'m'},
+      {id:'t013',lb:'Activate LinkedIn Sales Navigator',nt:'$99/mo. Advanced owner search. Cancel after active search phase.',p:'m'},
+      {id:'t014',lb:'Set up CRM pipeline (HubSpot free)',nt:'Stages: Identified > Contacted > NDA > Financials > LOI > Closed.',p:'h'},
+      {id:'t015',lb:'Create BizQuest saved search with alerts',nt:'Different broker inventory from BizBuySell. Worth the overlap.',p:'l'},
+    ]},
+    {id:'s1d',lb:'1.4',nm:'Advisory Team',tasks:[
+      {id:'t016',lb:'Retain M&A attorney - signed retainer',nt:'Emergency contact established. Sub-$5M acquisition specialist only.',p:'h'},
+      {id:'t017',lb:'Identify transaction CPA / accountant',nt:'Specializes in EBITDA normalization and QoE for sub-$5M deals.',p:'h'},
+      {id:'t018',lb:'Connect with 1-2 ETA mentors',nt:'3-7 years ahead, self-funded acquisition done. LinkedIn + SMBash.',p:'m'},
+      {id:'t019',lb:'Build broker contact list (15-20 TX brokers)',nt:'IBBA + M&A Source + BizBuySell broker search. TX primary.',p:'h'},
+      {id:'t020',lb:'Send 1-page buyer profile to all brokers',nt:'Include buy box, capital availability, 24-hr NDA turnaround signal.',p:'h'},
+      {id:'t021',lb:'Register for SMBash conference',nt:'smbash.com - primary self-funded ETA community event.',p:'m'},
+    ]},
+    {id:'s1e',lb:'1.5',nm:'Financial Readiness',tasks:[
+      {id:'t022',lb:'Complete capital stack worksheet (Excel model)',nt:'Confirm deployable capital and $50-75K working capital reserve.',p:'h'},
+      {id:'t023',lb:'Set aside working capital reserve ($50-75K)',nt:'Separate account. Untouchable for search expenses. Non-negotiable.',p:'h'},
+      {id:'t024',lb:'Verify SBA ineligibility status with a lender',nt:'Understand exactly what prevents eligibility and when it could change.',p:'m'},
+    ]},
+  ]},
+  {id:'p2',lb:'Phase 2',nm:'Search & Deal Sourcing',cl:'#0D6E6E',mt:'Months 1-12 · 8-12 hrs/wk',steps:[
+    {id:'s2a',lb:'2.1',nm:'Direct-to-Owner Outreach',tasks:[
+      {id:'t025',lb:'Build Apollo.io 4-touch outreach sequence',nt:'LinkedIn connect > intro email Day 4 > follow-up Day 11 > final Day 18.',p:'h'},
+      {id:'t026',lb:'Launch first batch of 50 outreach contacts',nt:'Personalize each touch. Reference their specific company.',p:'h'},
+      {id:'t027',lb:'Establish weekly outreach cadence (20-30/week)',nt:'Friday calendar block. Non-negotiable weekly habit.',p:'h'},
+      {id:'t028',lb:'Log all responses in CRM weekly',nt:'Target: 8-15 substantive conversations per month.',p:'m'},
+      {id:'t029',lb:'Review and optimize email copy monthly',nt:'Benchmark: 2-5% response rate on direct outreach.',p:'l'},
+    ]},
+    {id:'s2b',lb:'2.2',nm:'Broker Relationships',tasks:[
+      {id:'t030',lb:'Complete broker list (15-20 TX + PNW)',nt:'IBBA + M&A Source + BizBuySell broker search.',p:'h'},
+      {id:'t031',lb:'Send buyer profile to all brokers',nt:'Personalize each email. Reference a recent listing they posted.',p:'h'},
+      {id:'t032',lb:'Schedule 15-min intro calls with top 5-8 brokers',nt:'Goal: get on their call-first list before public posting.',p:'h'},
+      {id:'t033',lb:'Set quarterly broker follow-up reminders in CRM',nt:'Stay visible. Brokers forget quiet buyers quickly.',p:'m'},
+    ]},
+    {id:'s2c',lb:'2.3',nm:'Deal Screening',tasks:[
+      {id:'t034',lb:'Screen all incoming opportunities (Level 1)',nt:'5-min gut check against buy box. Fail = kill immediately.',p:'h'},
+      {id:'t035',lb:'Sign NDAs and request CIMs on L1 passes',nt:'24-hr NDA turnaround signals seriousness to brokers.',p:'h'},
+      {id:'t036',lb:'Complete Level 2 screening on all CIMs',nt:'30-min review: revenue trend, concentration, asking multiple.',p:'h'},
+      {id:'t037',lb:'Request 3-year tax returns on L2 passes',nt:'No financials = no further time invested. Non-negotiable.',p:'h'},
+      {id:'t038',lb:'Complete SDE normalization on L3 financials',nt:'Use Excel model unit economics calculator tab.',p:'h'},
+      {id:'t039',lb:'Maintain pipeline - kill bad deals fast',nt:'Target: 80-120 reviewed, 5-8 NDAs, 1-2 LOIs to close one deal.',p:'m'},
+    ]},
+  ]},
+  {id:'p3',lb:'Phase 3',nm:'Diligence & LOI',cl:'#2563EB',mt:'Months 8-18 · 15-20 hrs/wk',steps:[
+    {id:'s3a',lb:'3.1',nm:'Financial Diligence',tasks:[
+      {id:'t040',lb:'Submit full financial document request list',nt:'3-yr tax returns, monthly P&Ls, AR/AP aging, customer revenue breakdown, bank statements.',p:'h'},
+      {id:'t041',lb:'Engage transaction CPA for QoE review',nt:'Quality of Earnings - verifies EBITDA is real and recurring.',p:'h'},
+      {id:'t042',lb:'Verify revenue quality (recurring vs. transactional)',nt:'Recurring commands higher multiple AND lower integration risk.',p:'h'},
+      {id:'t043',lb:'Audit and challenge all add-backs',nt:'Every add-back must be documented with receipts.',p:'h'},
+      {id:'t044',lb:'Confirm no single client >20% of revenue',nt:'Hard limit. If violated, reprice significantly or walk away.',p:'h'},
+      {id:'t045',lb:'Review working capital requirements and peg',nt:'Agree on WC level seller must leave in business at close.',p:'m'},
+    ]},
+    {id:'s3b',lb:'3.2',nm:'Operational Diligence',tasks:[
+      {id:'t046',lb:'Request full operational document package',nt:'Org chart, SOPs, job descriptions, tech stack list, vendor contracts.',p:'h'},
+      {id:'t047',lb:'Conduct discovery meeting with seller',nt:'Ask key-person test questions. Document every answer carefully.',p:'h'},
+      {id:'t048',lb:'Assess key-person dependency risk',nt:'If >30% revenue walks with owner, structure earnout protection.',p:'h'},
+      {id:'t049',lb:'Evaluate management layer - meet the GM candidate',nt:'Is there someone who could run this without the owner? Meet them.',p:'h'},
+      {id:'t050',lb:'Map all client relationships to specific individuals',nt:'Who at each client company owns the relationship?',p:'m'},
+    ]},
+    {id:'s3c',lb:'3.3',nm:'Legal & Market Diligence',tasks:[
+      {id:'t051',lb:'Request and review all legal documents',nt:'Licenses, permits, litigation history, IP ownership, lease assignments.',p:'h'},
+      {id:'t052',lb:'Confirm all licenses/permits are transferable',nt:'Some certifications cannot transfer - must be re-earned post-close.',p:'h'},
+      {id:'t053',lb:'Conduct 2-3 customer reference calls',nt:'Ask: Would you stay if ownership changed? Listen for hesitation.',p:'h'},
+      {id:'t054',lb:'Research competitive landscape',nt:'Top 3 competitors, differentiation, recent client wins/losses.',p:'m'},
+    ]},
+    {id:'s3d',lb:'3.4',nm:'LOI Structure',tasks:[
+      {id:'t055',lb:'Draft LOI with M&A attorney',nt:'Do not use a template. Attorney writes this for your specific deal.',p:'h'},
+      {id:'t056',lb:'Negotiate purchase price based on diligence findings',nt:'Adjust from asking price if diligence found issues.',p:'h'},
+      {id:'t057',lb:'Negotiate seller note (60-70%, 5-7yr, 5-7%)',nt:'Target: majority of price as seller note at reasonable terms.',p:'h'},
+      {id:'t058',lb:'Negotiate LIMITED personal guarantee cap',nt:'Cap at down payment amount only - not unlimited. Most critical protection.',p:'h'},
+      {id:'t059',lb:'Negotiate 90-120 day transition period',nt:'Deliverables documented in writing. Client introductions required.',p:'h'},
+      {id:'t060',lb:'Negotiate 60-90 day exclusivity period',nt:'Seller cannot accept other offers while you complete diligence.',p:'m'},
+      {id:'t061',lb:'Get signed LOI from seller',nt:'Major milestone. Begin full diligence and legal work immediately.',p:'h'},
+    ]},
+  ]},
+  {id:'p4',lb:'Phase 4',nm:'Negotiation & Close',cl:'#7C3AED',mt:'Months 14-20 · 20-25 hrs/wk',steps:[
+    {id:'s4a',lb:'4.1',nm:'Purchase Agreement',tasks:[
+      {id:'t062',lb:'Confirm asset sale structure (not stock sale)',nt:'Protects you from inheriting all historical liabilities of the entity.',p:'h'},
+      {id:'t063',lb:'Negotiate reps & warranties with indemnification',nt:'Seller certifies accuracy. Breach = post-close legal recourse.',p:'h'},
+      {id:'t064',lb:'Agree on working capital peg and adjustment mechanism',nt:'Protects you if seller drains receivables before closing.',p:'h'},
+      {id:'t065',lb:'Negotiate employee transition terms',nt:'Which employees stay? Stay bonuses for critical team members.',p:'h'},
+      {id:'t066',lb:'Finalize client notification plan',nt:'Coordinated during transition - not a mass email on Day 1.',p:'m'},
+      {id:'t067',lb:'Finalize seller note documentation',nt:'Promissory note + security agreement + exact personal guarantee language.',p:'h'},
+      {id:'t068',lb:'Attorney final review of complete APA',nt:'Do not sign anything your attorney has not reviewed line-by-line.',p:'h'},
+    ]},
+    {id:'s4b',lb:'4.2',nm:'Closing Logistics',tasks:[
+      {id:'t069',lb:'Create subsidiary LLC under Angira Ventures',nt:'[BizName] LLC. Assets transfer into this entity at close.',p:'h'},
+      {id:'t070',lb:'Obtain all insurance (effective on closing date)',nt:'GL + workers comp + professional liability. Cannot close without.',p:'h'},
+      {id:'t071',lb:'Open business checking for operating entity',nt:'Some banks take 30 days - start early. Do not miss first payroll.',p:'h'},
+      {id:'t072',lb:'Set up payroll service for new entity',nt:'Gusto or ADP. First payroll run cannot be missed.',p:'h'},
+      {id:'t073',lb:'Confirm all license and permit transfers',nt:'All required licenses re-issued in new entity name before close.',p:'h'},
+      {id:'t074',lb:'Prepare proof of funds documentation',nt:'Bank statement confirming down payment capital is available.',p:'m'},
+      {id:'t075',lb:'Verify wire instructions by phone before sending',nt:'CRITICAL: Wire fraud is a real and growing risk in small biz closings.',p:'h'},
+      {id:'t076',lb:'Execute closing and fund wire',nt:'Keys in hand. You are now a business owner.',p:'h'},
+    ]},
+  ]},
+  {id:'p5',lb:'Phase 5',nm:'First 100 Days Post-Close',cl:'#BE185D',mt:'Months 1-3 post-close · 25-30 hrs/wk',steps:[
+    {id:'s5a',lb:'5.1',nm:'Days 1-7: Stabilization',tasks:[
+      {id:'t077',lb:'Joint employee announcement with seller (Day 1)',nt:'In-person if possible. Tone = continuity. No major changes announced yet.',p:'h'},
+      {id:'t078',lb:'1-on-1 meetings with every employee (Days 1-2)',nt:'Listen more than talk. Ask what you need to know that no one told you.',p:'h'},
+      {id:'t079',lb:'Review all outstanding client accounts (Days 2-3)',nt:'Who owes money? At-risk relationships? Renewals due in 90 days?',p:'h'},
+      {id:'t080',lb:'First private meeting with retained GM (Days 3-5)',nt:'Establish authority, communication cadence, and working relationship.',p:'h'},
+      {id:'t081',lb:'First financial reconciliation as owner (Days 5-7)',nt:'Bank balance vs. working capital peg. Payroll confirmed.',p:'h'},
+    ]},
+    {id:'s5b',lb:'5.2',nm:'Days 8-30: Documentation',tasks:[
+      {id:'t082',lb:'Document client delivery process end-to-end',nt:'Onboarding to invoicing to quality review. Written SOP by Day 30.',p:'h'},
+      {id:'t083',lb:'Build client relationship map in CRM',nt:'Decision-maker for renewal at every account. All clients.',p:'h'},
+      {id:'t084',lb:'Document all financial processes',nt:'Invoicing, payment terms, expense approval, payroll workflow.',p:'h'},
+      {id:'t085',lb:'Obtain admin access to all tech and software',nt:'Every tool, email account, website, social profile, cloud service.',p:'h'},
+      {id:'t086',lb:'Introduce yourself to all key vendors in writing',nt:'Email from new owner. Confirm terms and key contacts.',p:'m'},
+      {id:'t087',lb:'Day 30: All client introductions complete',nt:'Every top-20 client introduced by name and in writing.',p:'h'},
+    ]},
+    {id:'s5c',lb:'5.3',nm:'Days 31-100: Operating Rhythm',tasks:[
+      {id:'t088',lb:'Implement weekly GM check-in (30-min standing call)',nt:'GM reports on revenue, ops, client status. You listen and decide.',p:'h'},
+      {id:'t089',lb:'Set up monthly P&L review process',nt:'Formatted P&L from bookkeeper delivered by 10th of each month.',p:'h'},
+      {id:'t090',lb:'Define and track 7 core KPIs',nt:'MRR, client churn, gross margin, AR days, headcount, note payment, WC.',p:'h'},
+      {id:'t091',lb:'Day 60: All SOPs complete and verified',nt:'All tribal knowledge documented. Full knowledge transfer done.',p:'h'},
+      {id:'t092',lb:'Establish GM performance bonus structure',nt:'Bonus tied to EBITDA improvement + revenue retention. Align incentives.',p:'m'},
+      {id:'t093',lb:'Day 90: Seller transition period complete',nt:'All contractual transition obligations fulfilled by seller.',p:'h'},
+    ]},
+  ]},
+  {id:'p6',lb:'Phase 6',nm:'Operate, Scale & Exit Prep',cl:'#B45309',mt:'Years 1-7 · 8-15 hrs/wk steady state',steps:[
+    {id:'s6a',lb:'6.1',nm:'Year 1-2: Optimize First Acquisition',tasks:[
+      {id:'t094',lb:'Review all contracts for pricing opportunities',nt:'No rate increase in 2+ yrs? Implement 5-8% increase. Most B2B clients accept.',p:'h'},
+      {id:'t095',lb:'Implement formal client QBR process',nt:'Top 10 accounts. Proactive relationship = 30-50% less churn.',p:'h'},
+      {id:'t096',lb:'Convert project-based work to recurring contracts',nt:'Recurring revenue commands higher exit multiple.',p:'m'},
+      {id:'t097',lb:'Install CRM if not in place',nt:'HubSpot free tier. Track renewals and upsell opportunities.',p:'m'},
+      {id:'t098',lb:'Structure GM equity/profit-sharing plan',nt:'A GM who shares in the upside drives growth more aggressively.',p:'h'},
+      {id:'t099',lb:'Re-evaluate SBA eligibility at Month 18',nt:'12-24 months of profitable history may change your SBA profile.',p:'m'},
+    ]},
+    {id:'s6b',lb:'6.2',nm:'Year 2-3: Second Acquisition',tasks:[
+      {id:'t100',lb:'Determine second acquisition strategy',nt:'Bolt-on (same industry) vs. new vertical vs. geographic expansion.',p:'m'},
+      {id:'t101',lb:'Re-activate deal sourcing for Acquisition #2',nt:'Use established broker relationships and Apollo outreach.',p:'m'},
+      {id:'t102',lb:'Model Acquisition #2 using Excel financial model',nt:'Apply lessons from Acquisition #1 to refine buy box and assumptions.',p:'m'},
+      {id:'t103',lb:'Explore shared back-office across entities',nt:'Single bookkeeper, shared insurance, combined vendor relationships.',p:'l'},
+    ]},
+    {id:'s6c',lb:'6.3',nm:'Year 3-7: Exit Preparation',tasks:[
+      {id:'t104',lb:'Engage CPA for GAAP financial statements (Year 4)',nt:'Buyers require clean, normalized financials - not just tax returns.',p:'m'},
+      {id:'t105',lb:'Reduce customer concentration below 20% per client',nt:'Proactively grow other accounts. Buyers discount concentration heavily.',p:'h'},
+      {id:'t106',lb:'Maximize recurring revenue (2 yrs before exit)',nt:'Buyers pay a premium for contractual recurring revenue.',p:'h'},
+      {id:'t107',lb:'Engage sell-side M&A advisor (18-24 mo before exit)',nt:'Investment banker for sub-$20M sale. Runs competitive process.',p:'m'},
+      {id:'t108',lb:'Run competitive sale process - 5-7x EBITDA target',nt:'Strategic buyer or roll-up acquirer. Achieve 2033 liquidity target.',p:'h'},
+    ]},
+  ]},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let ST = {}, filt = 'all', openP = new Set(['p1']), closedS = new Set();
+let db = null, saveTimer = null, unsubscribe = null;
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDokmJXZ-V5X6KF9x2Q-_nxnG0cQRQrdic",
+  projectId: "angira-eta",
+  appId: "1:627476575992:web:cc3a4c855517087a9e6d0d"
+};
+const DOC_PATH = 'tracker/state';
+const CHECK_SVG = `<svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>`;
+
+function allTasks() { return PH.flatMap(p => p.steps.flatMap(s => s.tasks)); }
+function init() { PH.forEach(p => p.steps.forEach(s => s.tasks.forEach(t => { if (!ST[t.id]) ST[t.id] = {status:'not-started', date:''}; }))); }
+
+// ── SYNC UI ───────────────────────────────────────────────────────────────────
+function sy(type, msg) {
+  document.getElementById('dot').className = 'sdot ' + type;
+  document.getElementById('stx').textContent = msg;
+  if (type === 'ok') document.getElementById('stm').textContent = 'Last synced ' + new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+// ── FIREBASE SETUP ────────────────────────────────────────────────────────────
+function showSetup() {
+  const saved = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
+  if (saved.apiKey) document.getElementById('cfg-apikey').value = saved.apiKey;
+  if (saved.projectId) document.getElementById('cfg-projectid').value = saved.projectId;
+  if (saved.appId) document.getElementById('cfg-appid').value = saved.appId;
+  document.getElementById('setup-screen').classList.remove('hidden');
+}
+
+window.connectFirebase = async function() {
+ const apiKey = FIREBASE_CONFIG.apiKey;
+const projectId = FIREBASE_CONFIG.projectId;
+const appId = FIREBASE_CONFIG.appId;
+  const errEl = document.getElementById('setup-err');
+  errEl.style.display = 'none';
+
+  if (!apiKey || !projectId || !appId) {
+    errEl.textContent = 'Please fill in all three fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const btn = document.querySelector('.setup-btn');
+  btn.textContent = 'Connecting...';
+  btn.disabled = true;
+
+  try {
+    const cfg = { apiKey, authDomain: projectId + '.firebaseapp.com', projectId, storageBucket: projectId + '.appspot.com', appId };
+    const app = initializeApp(cfg, 'eta-tracker-' + Date.now());
+    db = getFirestore(app);
+
+    // Test connection with a read
+    await getDoc(doc(db, DOC_PATH));
+
+    // Save config
+    // config is hardcoded
+    document.getElementById('setup-screen').classList.add('hidden');
+
+    startSync();
+  } catch(e) {
+    errEl.textContent = 'Could not connect: ' + (e.message || 'Check your values and ensure Firestore is in Test Mode.');
+    errEl.style.display = 'block';
+    btn.textContent = 'Connect & Start Tracking';
+    btn.disabled = false;
+  }
+};
+
+// ── FIRESTORE SYNC ────────────────────────────────────────────────────────────
+function startSync() {
+  sy('busy', 'Loading your progress...');
+
+  // Real-time listener — updates UI instantly on any device change
+  unsubscribe = onSnapshot(doc(db, DOC_PATH), (snap) => {
+    if (snap.exists()) {
+      const remote = snap.data().tasks || {};
+      // Merge: remote wins for any key that exists remotely
+      Object.assign(ST, remote);
+    }
+    init(); // ensure all task IDs have defaults
+    sy('ok', 'Synced across all devices');
+    upd();
+    render();
+  }, (err) => {
+    sy('err', 'Sync error — ' + err.message);
+  });
+}
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  sy('busy', 'Saving...');
+  saveTimer = setTimeout(async () => {
+    try {
+      await setDoc(doc(db, DOC_PATH), { tasks: ST, updated: new Date().toISOString() });
+      sy('ok', 'Synced across all devices');
+    } catch(e) {
+      sy('err', 'Save failed — ' + e.message);
+    }
+  }, 800);
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function isOv(s) {
+  if (!s || !s.date || s.status === 'complete') return false;
+  const n = new Date(); n.setHours(0,0,0,0);
+  return new Date(s.date + 'T00:00:00') < n;
+}
+
+function upd() {
+  const tasks = allTasks(); const now = new Date(); now.setHours(0,0,0,0);
+  let dn=0, pr=0, bl=0, ov=0;
+  tasks.forEach(t => {
+    const s = ST[t.id] || {};
+    if (s.status === 'complete') dn++;
+    if (s.status === 'in-progress') pr++;
+    if (s.status === 'blocked') bl++;
+    if (isOv(s)) ov++;
+  });
+  const tot = tasks.length, pct = tot ? Math.round(dn/tot*100) : 0;
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('tof').textContent = dn + ' / ' + tot + ' tasks';
+  document.getElementById('sd').textContent = dn;
+  document.getElementById('sp').textContent = pr;
+  document.getElementById('so').textContent = ov;
+  document.getElementById('sb').textContent = bl;
+  document.getElementById('prog').style.width = pct + '%';
+}
+
+function mt(id) {
+  const s = ST[id] || {};
+  if (filt === 'all') return true;
+  if (filt === 'overdue') return isOv(s);
+  return s.status === filt;
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app'); app.innerHTML = '';
+  PH.forEach(ph => {
+    const pt = ph.steps.flatMap(s => s.tasks);
+    const pd = pt.filter(t => ST[t.id]?.status === 'complete').length;
+    const io = openP.has(ph.id);
+
+    const card = document.createElement('div'); card.className = 'pcard';
+    const hdr = document.createElement('div'); hdr.className = 'phdr'; hdr.style.background = ph.cl;
+    hdr.innerHTML = `<span class="pbadge">${ph.lb}</span><div class="pinfo"><div class="pname">${ph.nm}</div><div class="pmeta">${ph.mt}</div></div><div class="pright"><span class="pcnt">${pd}/${pt.length}</span><span class="chv ${io?'o':''}">&#9660;</span></div>`;
+    hdr.onclick = () => { io ? openP.delete(ph.id) : openP.add(ph.id); render(); };
+    card.appendChild(hdr);
+
+    if (io) {
+      const body = document.createElement('div'); body.className = 'pbody';
+      let any = false;
+
+      ph.steps.forEach(st => {
+        const vis = st.tasks.filter(t => mt(t.id));
+        if (!vis.length) return;
+        any = true;
+
+        const sd = st.tasks.filter(t => ST[t.id]?.status === 'complete').length;
+        const sk = ph.id + st.id, so = !closedS.has(sk);
+        const grp = document.createElement('div'); grp.className = 'sgrp';
+        const sh = document.createElement('div'); sh.className = 'shdr';
+        sh.innerHTML = `<span class="sbadge">${st.lb}</span><span class="sname">${st.nm}</span><span class="scnt">${sd}/${st.tasks.length}</span><span class="schv ${so?'o':''}">&#9660;</span>`;
+        sh.onclick = () => { closedS.has(sk) ? closedS.delete(sk) : closedS.add(sk); render(); };
+        grp.appendChild(sh);
+
+        if (so) {
+          vis.forEach(task => {
+            const s = ST[task.id] || {status:'not-started', date:''};
+            const dn = s.status === 'complete', ov = isOv(s);
+            const row = document.createElement('div');
+            row.className = 'task' + (dn?' dn':'') + (ov&&!dn?' ov':'');
+
+            const chk = document.createElement('div');
+            chk.className = 'chk' + (dn?' on':'');
+            chk.setAttribute('role','checkbox'); chk.setAttribute('aria-checked', String(dn));
+            chk.innerHTML = CHECK_SVG;
+            chk.onclick = () => {
+              ST[task.id].status = dn ? 'not-started' : 'complete';
+              scheduleSave(); upd(); render();
+            };
+
+            const tb = document.createElement('div'); tb.className = 'tbody';
+            tb.innerHTML = `<div class="tlbl">${task.lb}</div>${task.nt ? `<div class="tnote">${task.nt}</div>` : ''}`;
+
+            const pr = document.createElement('div');
+            pr.className = 'pri p' + task.p;
+            pr.title = 'Priority: ' + (task.p==='h'?'High':task.p==='m'?'Medium':'Low');
+
+            const main = document.createElement('div'); main.className = 'task-main';
+            main.appendChild(chk); main.appendChild(tb); main.appendChild(pr);
+            row.appendChild(main);
+
+            const ctrls = document.createElement('div'); ctrls.className = 'task-ctrls';
+
+            const dg = document.createElement('div'); dg.className = 'ctrl-grp';
+            dg.innerHTML = `<div class="clbl">Target date</div>`;
+            const di = document.createElement('input');
+            di.type = 'date'; di.value = s.date || '';
+            di.className = 'tdate' + (ov ? ' ov-date' : '');
+            di.onchange = e => { ST[task.id].date = e.target.value; scheduleSave(); upd(); render(); };
+            dg.appendChild(di);
+
+            const sg = document.createElement('div'); sg.className = 'ctrl-grp';
+            sg.innerHTML = `<div class="clbl">Status</div>`;
+            const sel = document.createElement('select');
+            sel.className = 'tsel s-' + s.status;
+            [['not-started','Not Started'],['in-progress','In Progress'],['complete','Complete'],['blocked','Blocked']].forEach(([v,l]) => {
+              const o = document.createElement('option'); o.value = v; o.textContent = l;
+              if (s.status === v) o.selected = true; sel.appendChild(o);
+            });
+            sel.onchange = e => {
+              ST[task.id].status = e.target.value;
+              sel.className = 'tsel s-' + e.target.value;
+              scheduleSave(); upd(); render();
+            };
+            sg.appendChild(sel);
+
+            ctrls.appendChild(dg); ctrls.appendChild(sg);
+            row.appendChild(ctrls);
+            grp.appendChild(row);
+          });
+        }
+        body.appendChild(grp);
+      });
+
+      if (!any) {
+        const em = document.createElement('div'); em.className = 'empty';
+        em.textContent = 'No tasks match this filter in ' + ph.nm + '.';
+        body.appendChild(em);
+      }
+      card.appendChild(body);
+    }
+    app.appendChild(card);
+  });
+}
+
+// ── FILTERS & RESET ───────────────────────────────────────────────────────────
+window.sf = function(f, btn) {
+  filt = f;
+  document.querySelectorAll('.fbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  render();
+};
+
+window.doReset = function() {
+  if (!confirm('Reset all tasks to Not Started and clear all dates? This cannot be undone.')) return;
+  ST = {}; init(); scheduleSave(); upd(); render();
+};
+
+window.showSetup = showSetup;
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+init();
+upd();
+render();
+
+// Auto-connect if config exists
+connectFirebase();
+</script>
+</body>
+</html>
