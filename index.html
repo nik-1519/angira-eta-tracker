@@ -1,0 +1,617 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B2A4A;--teal:#0D6E6E;--accent:#2563EB;
+  --bg:#F7F6F2;--surface:#FFFFFF;--surface2:#F0EEE8;
+  --border:#DDD9CF;--border2:#C8C3B5;
+  --text:#1A1A18;--text2:#5A574F;--text3:#8B8780;
+  --green:#059669;--green-bg:#D1FAE5;
+  --amber:#D97706;--amber-bg:#FEF3C7;
+  --red:#DC2626;--red-bg:#FEE2E2;
+  --blue-bg:#EFF6FF;
+  --phase1:#1B2A4A;--phase2:#0D6E6E;--phase3:#2563EB;
+  --phase4:#7C3AED;--phase5:#DB2777;--phase6:#D97706;
+}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px}
+
+/* HEADER */
+.header{background:var(--navy);padding:28px 32px 24px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:220px;height:220px;border-radius:50%;background:rgba(13,110,110,0.15);pointer-events:none}
+.header::after{content:'';position:absolute;bottom:-60px;left:20%;width:300px;height:120px;border-radius:50%;background:rgba(37,99,235,0.08);pointer-events:none}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.header-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:rgba(255,255,255,0.45);text-transform:uppercase;margin-bottom:6px}
+.header-title{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;line-height:1.15;margin-bottom:4px}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.5);font-style:italic}
+.header-stats{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,0.1)}
+.stat{text-align:center}
+.stat-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:#fff;line-height:1}
+.stat-label{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:0.08em;text-transform:uppercase;margin-top:3px}
+.progress-bar-wrap{margin-top:16px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.progress-track{height:6px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--accent));border-radius:3px;transition:width 0.6s cubic-bezier(.4,0,.2,1)}
+
+/* CONTROLS */
+.controls{padding:16px 32px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0;z-index:100}
+.filter-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:6px 14px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all 0.15s}
+.filter-btn:hover{background:var(--surface2);color:var(--text)}
+.filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.controls-right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.save-indicator{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;opacity:0;transition:opacity 0.3s}
+.save-indicator.show{opacity:1}
+
+/* PHASE SECTION */
+.phase-section{margin:0 24px;margin-top:24px}
+.phase-header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-radius:8px 8px 0 0;cursor:pointer;user-select:none;position:relative}
+.phase-pip{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.phase-name{font-family:'DM Serif Display',serif;font-size:16px;color:#fff;flex:1}
+.phase-meta{font-size:11px;color:rgba(255,255,255,0.55);font-family:'DM Mono',monospace}
+.phase-progress{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.7);background:rgba(0,0,0,0.2);padding:3px 10px;border-radius:20px}
+.phase-chevron{font-size:14px;color:rgba(255,255,255,0.5);transition:transform 0.2s;flex-shrink:0}
+.phase-chevron.open{transform:rotate(180deg)}
+.phase-body{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;margin-bottom:16px}
+
+/* STEP GROUP */
+.step-group{border-bottom:1px solid var(--border)}
+.step-group:last-child{border-bottom:none}
+.step-header{padding:10px 20px;background:var(--surface2);display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:var(--text2);letter-spacing:0.03em;cursor:pointer;user-select:none}
+.step-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);background:var(--border);padding:2px 7px;border-radius:3px}
+.step-count{margin-left:auto;font-family:'DM Mono',monospace;font-size:10px;color:var(--text3)}
+
+/* TASK ROWS */
+.task-row{display:grid;grid-template-columns:32px 1fr 130px 110px 80px;align-items:center;gap:0;padding:10px 20px;border-bottom:1px solid rgba(221,217,207,0.5);transition:background 0.1s;min-height:52px}
+.task-row:last-child{border-bottom:none}
+.task-row:hover{background:var(--blue-bg)}
+.task-row.done{background:var(--green-bg)}
+.task-row.done:hover{background:#C6F6E4}
+.task-row.overdue .task-due{color:var(--red);font-weight:600}
+.task-row.overdue:not(.done) .task-date{color:var(--red)}
+
+/* Checkbox */
+.task-check{width:20px;height:20px;border-radius:5px;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;background:#fff}
+.task-check:hover{border-color:var(--accent)}
+.task-check.checked{background:var(--green);border-color:var(--green)}
+.task-check.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700;line-height:1}
+.task-check:not(.checked)::after{content:''}
+
+/* Task content */
+.task-content{padding:0 12px}
+.task-label{font-size:13px;color:var(--text);line-height:1.4;font-weight:500}
+.task-row.done .task-label{text-decoration:line-through;color:var(--text3)}
+.task-sublabel{font-size:11px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+
+/* Date input */
+.date-wrap{display:flex;flex-direction:column;gap:3px}
+.date-label{font-size:9px;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3);font-family:'DM Mono',monospace}
+.task-date{font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--border);border-radius:4px;padding:4px 7px;background:#fff;color:var(--text);cursor:pointer;width:120px;outline:none;transition:border-color 0.15s}
+.task-date:focus{border-color:var(--accent)}
+.task-date:hover{border-color:var(--border2)}
+
+/* Status badge */
+.status-select{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:0.05em;border:1px solid var(--border);border-radius:4px;padding:4px 6px;background:#fff;color:var(--text);cursor:pointer;width:100px;outline:none}
+.status-not-started{color:var(--text3);background:#F7F6F2}
+.status-in-progress{color:var(--amber);background:var(--amber-bg)}
+.status-complete{color:var(--green);background:var(--green-bg)}
+.status-blocked{color:var(--red);background:var(--red-bg)}
+
+/* Priority dot */
+.priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin:0 auto}
+.p-high{background:var(--red)}
+.p-med{background:var(--amber)}
+.p-low{background:var(--green)}
+
+/* Notes tooltip area */
+.task-note{font-size:10px;color:var(--text3);font-style:italic;margin-top:3px;max-width:400px;line-height:1.4}
+
+/* Empty state */
+.empty-msg{padding:32px;text-align:center;color:var(--text3);font-style:italic;font-size:13px}
+
+/* Reset btn */
+.reset-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all 0.15s}
+.reset-btn:hover{background:var(--red-bg);color:var(--red);border-color:var(--red)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-label">Angira Ventures LLC · ETA Program</div>
+      <div class="header-title">Acquisition Playbook<br><em>Milestone Tracker</em></div>
+      <div class="header-sub">Self-funded B2B acquisition — 2024 to 2033 liquidity target</div>
+    </div>
+    <div style="text-align:right">
+      <div class="header-label">Overall Completion</div>
+      <div id="pct-display" style="font-family:'DM Mono',monospace;font-size:36px;color:#fff;font-weight:500;line-height:1">0%</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px" id="tasks-of">0 of 0 tasks complete</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="stat-num" id="stat-done">0</div><div class="stat-label">Done</div></div>
+    <div class="stat"><div class="stat-num" id="stat-progress">0</div><div class="stat-label">In Progress</div></div>
+    <div class="stat"><div class="stat-num" id="stat-blocked">0</div><div class="stat-label">Blocked</div></div>
+    <div class="stat"><div class="stat-num" id="stat-overdue">0</div><div class="stat-label">Overdue</div></div>
+    <div class="stat"><div class="stat-num" id="stat-upcoming">0</div><div class="stat-label">This Month</div></div>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label"><span>Foundation</span><span>→ Scale & Exit</span></div>
+    <div class="progress-track"><div class="progress-fill" id="main-progress" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+  <button class="filter-btn" onclick="setFilter('in-progress',this)">In Progress</button>
+  <button class="filter-btn" onclick="setFilter('not-started',this)">Not Started</button>
+  <button class="filter-btn" onclick="setFilter('complete',this)">Complete</button>
+  <button class="filter-btn" onclick="setFilter('blocked',this)">Blocked</button>
+  <button class="filter-btn" onclick="setFilter('overdue',this)">Overdue</button>
+  <div class="controls-right">
+    <span class="save-indicator" id="save-ind">✓ Saved</span>
+    <button class="reset-btn" onclick="confirmReset()">Reset All</button>
+  </div>
+</div>
+
+<div id="tracker"></div>
+
+<script>
+const STORAGE_KEY = 'angira_eta_tracker_v2';
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+// ── PLAYBOOK DATA ─────────────────────────────────────────────────────────────
+const PHASES = [
+  {
+    id:'p1', label:'Phase 1', name:'Foundation & Infrastructure',
+    color:'var(--phase1)', timeframe:'Months 1–2 · 5–8 hrs/week',
+    steps:[
+      {id:'s1a', label:'Step 1.1', name:'Entity Structure & Legal Foundation', tasks:[
+        {id:'t001',label:'Engage M&A attorney (sub-$5M specialist)',note:'Budget $5K–$15K total. Ask for ETA community referrals at smbash.com.',priority:'high'},
+        {id:'t002',label:'Confirm Angira Ventures LLC holding structure',note:'Verify WY or DE domicile. Review operating agreement for acquisition flexibility.',priority:'high'},
+        {id:'t003',label:'Draft subsidiary LLC template with attorney',note:'Each acquisition becomes [BizName] LLC, wholly owned by Angira Ventures.',priority:'med'},
+        {id:'t004',label:'Open dedicated Angira Ventures business checking account',note:'Mercury, Relay, or a local community bank. Keep 100% separate from personal.',priority:'high'},
+        {id:'t005',label:'Set up QuickBooks Online or Wave for Angira Ventures',note:'Track all search expenses — they are legitimate business costs.',priority:'med'},
+        {id:'t006',label:'Obtain D-U-N-S number for Angira Ventures',note:'Free via Dun & Bradstreet. Takes 1–2 weeks. Starts building biz credit.',priority:'low'},
+      ]},
+      {id:'s1b', label:'Step 1.2', name:'Define & Document Your Buy Box', tasks:[
+        {id:'t007',label:'Write your 1-page buy box document',note:'Industry, revenue range, SDE target, geography (TX primary), GM Shield requirement.',priority:'high'},
+        {id:'t008',label:'Define hard no-go criteria in writing',note:'e.g. >20% customer concentration, no seller note, WA heavy labor — all deal-killers.',priority:'high'},
+        {id:'t009',label:'Research and rank your 3 priority target industries',note:'Managed IT, B2B staffing (TX), accounting/bookkeeping recommended based on your profile.',priority:'med'},
+      ]},
+      {id:'s1c', label:'Step 1.3', name:'Deal Flow Infrastructure', tasks:[
+        {id:'t010',label:'Create BizBuySell saved search with alerts',note:'Filter by your buy box. Enable daily email. Free.',priority:'high'},
+        {id:'t011',label:'Set up Apollo.io prospect list (200+ contacts)',note:'Owners 50+, target industries, TX geography, company age 10+ years.',priority:'high'},
+        {id:'t012',label:'Register buyer profile on Axial.net',note:'Include your buy box precisely. Brokers search buyer profiles for new listings.',priority:'med'},
+        {id:'t013',label:'Activate LinkedIn Sales Navigator',note:'$99/mo. Advanced owner search by industry + company tenure. Cancel after active search.',priority:'med'},
+        {id:'t014',label:'Set up CRM pipeline (HubSpot free or Notion)',note:'Stages: Identified → Contacted → NDA → Financials → LOI → Under Contract → Closed.',priority:'high'},
+        {id:'t015',label:'Create BizQuest saved search with alerts',note:'Different broker inventory from BizBuySell. Overlap is worth having.',priority:'low'},
+      ]},
+      {id:'s1d', label:'Step 1.4', name:'Assemble Your Advisory Team', tasks:[
+        {id:'t016',label:'Identify and retain M&A attorney',note:'Confirmed retainer signed. Emergency contact established.',priority:'high'},
+        {id:'t017',label:'Identify transaction CPA / accountant',note:'Specializes in EBITDA normalization and QoE reviews for sub-$5M deals.',priority:'high'},
+        {id:'t018',label:'Find and connect with 1–2 ETA mentors',note:'People 3–7 years ahead who have done a self-funded acquisition. LinkedIn + SMBash.',priority:'med'},
+        {id:'t019',label:'Build broker contact list (15–20 TX brokers)',note:'IBBA directory + M&A Source + BizBuySell broker search. TX primary.',priority:'high'},
+        {id:'t020',label:'Send your 1-page buyer profile to all brokers',note:'Include buy box, capital availability, speed/seriousness signal.',priority:'high'},
+        {id:'t021',label:'Register for SMBash conference',note:'smbash.com — primary self-funded ETA community event. One conference = 6 months of research.',priority:'med'},
+      ]},
+      {id:'s1e', label:'Step 1.5', name:'Financial Readiness Assessment', tasks:[
+        {id:'t022',label:'Complete capital stack worksheet (use Excel model)',note:'Confirm deployable capital, working capital reserve ($50–75K), and search budget.',priority:'high'},
+        {id:'t023',label:'Confirm working capital reserve is set aside',note:'$50–75K minimum — separate account, untouchable for search expenses.',priority:'high'},
+        {id:'t024',label:'Verify SBA ineligibility status with a lender',note:'Understand exactly what prevents eligibility and when it could change.',priority:'med'},
+      ]},
+    ]
+  },
+  {
+    id:'p2', label:'Phase 2', name:'Search & Deal Sourcing',
+    color:'var(--phase2)', timeframe:'Months 1–12 · 8–12 hrs/week',
+    steps:[
+      {id:'s2a', label:'Step 2.1', name:'Direct-to-Owner Outreach (Apollo.io)', tasks:[
+        {id:'t025',label:'Build Apollo.io sequence (4-touch, 3-week cadence)',note:'Touch 1: LinkedIn connect. Touch 2: intro email. Touch 3: follow-up. Touch 4: final.',priority:'high'},
+        {id:'t026',label:'Launch first batch of 50 outreach contacts',note:'Personalize each touch. No mass blast. Reference their company specifically.',priority:'high'},
+        {id:'t027',label:'Establish weekly outreach cadence (20–30 new contacts/week)',note:'Set a Friday calendar block. Non-negotiable habit.',priority:'high'},
+        {id:'t028',label:'Log all responses and advance pipeline in CRM',note:'Target: 8–15 substantive conversations per month.',priority:'med'},
+        {id:'t029',label:'Track response rate and optimize email copy monthly',note:'Benchmark: 2–5% response rate on direct outreach.',priority:'low'},
+      ]},
+      {id:'s2b', label:'Step 2.2', name:'Broker Relationship Development', tasks:[
+        {id:'t030',label:'Complete broker list (15–20 TX + PNW brokers)',note:'IBBA + M&A Source + BizBuySell broker search.',priority:'high'},
+        {id:'t031',label:'Send buyer profile to all brokers on list',note:'Personalize each email. Reference a recent listing to signal you are paying attention.',priority:'high'},
+        {id:'t032',label:'Schedule 15-min intro calls with top 5–8 brokers',note:'Goal: get on their "call first" list for new listings before public posting.',priority:'high'},
+        {id:'t033',label:'Set quarterly broker follow-up reminders in CRM',note:'Stay visible. Brokers forget buyers who go quiet.',priority:'med'},
+      ]},
+      {id:'s2c', label:'Step 2.3', name:'Deal Screening Process', tasks:[
+        {id:'t034',label:'Review and screen all incoming opportunities (Level 1)',note:'5-minute gut check. Does it hit your buy box? If not, kill immediately.',priority:'high'},
+        {id:'t035',label:'Sign NDA and request CIM on Level 1 passes',note:'24-hour turnaround on NDAs signals seriousness to brokers.',priority:'high'},
+        {id:'t036',label:'Complete Level 2 screening on all CIMs received',note:'30-minute review. Revenue trend, customer concentration, asking multiple.',priority:'high'},
+        {id:'t037',label:'Request 3 years tax returns + P&Ls on Level 2 passes',note:'No financials = no further time invested. This is non-negotiable.',priority:'high'},
+        {id:'t038',label:'Complete SDE normalization on all Level 3 financials',note:'Use the Excel model unit economics calculator tab.',priority:'high'},
+        {id:'t039',label:'Maintain deal pipeline — kill bad deals fast',note:'Target: 80–120 reviewed, 5–8 NDAs, 1–2 LOIs over 12 months.',priority:'med'},
+      ]},
+    ]
+  },
+  {
+    id:'p3', label:'Phase 3', name:'Diligence & LOI',
+    color:'var(--phase3)', timeframe:'Months 8–18 · 15–20 hrs/week',
+    steps:[
+      {id:'s3a', label:'Step 3.1', name:'Financial Diligence', tasks:[
+        {id:'t040',label:'Submit full financial document request list to seller',note:'3-yr tax returns, monthly P&Ls, AR/AP aging, customer revenue breakdown, bank statements.',priority:'high'},
+        {id:'t041',label:'Engage transaction CPA for QoE review',note:'Quality of Earnings — verifies EBITDA is real and recurring.',priority:'high'},
+        {id:'t042',label:'Verify revenue quality (recurring vs. transactional)',note:'Recurring commands higher multiple AND lower integration risk.',priority:'high'},
+        {id:'t043',label:'Audit and challenge all add-backs',note:'Every add-back must be documented. Aggressive add-backs = negotiating leverage for you.',priority:'high'},
+        {id:'t044',label:'Confirm customer concentration (no single client >20%)',note:'Hard limit. If violated, either reprice or walk away.',priority:'high'},
+        {id:'t045',label:'Review working capital requirements and peg',note:'Agree on working capital level seller must leave in business at close.',priority:'med'},
+      ]},
+      {id:'s3b', label:'Step 3.2', name:'Operational Diligence', tasks:[
+        {id:'t046',label:'Request full operational document package',note:'Org chart, SOPs (if any), job descriptions, tech stack list, vendor contracts.',priority:'high'},
+        {id:'t047',label:'Conduct discovery meeting with seller',note:'Ask key-person test questions. Document every answer.',priority:'high'},
+        {id:'t048',label:'Assess key-person dependency risk',note:'If >30% revenue walks with owner post-close, structure earnout protection.',priority:'high'},
+        {id:'t049',label:'Evaluate management layer and GM candidate',note:'Is there someone who could run this without the owner? Meet them.',priority:'high'},
+        {id:'t050',label:'Map all client relationships to specific individuals',note:'Who at each client company does the relationship belong to?',priority:'med'},
+      ]},
+      {id:'s3c', label:'Step 3.3', name:'Legal & Market Diligence', tasks:[
+        {id:'t051',label:'Request and review all legal documents',note:'Licenses, permits, litigation history, IP ownership, lease assignments.',priority:'high'},
+        {id:'t052',label:'Confirm all licenses/permits are transferable',note:'Some professional certifications cannot be transferred — must be re-earned.',priority:'high'},
+        {id:'t053',label:'Conduct 2–3 customer reference calls',note:'Ask: "Would you stay if ownership changed?" Listen carefully to hesitation.',priority:'high'},
+        {id:'t054',label:'Research competitive landscape',note:'Top 3 competitors, differentiation, any recent client wins/losses.',priority:'med'},
+      ]},
+      {id:'s3d', label:'Step 3.4', name:'LOI Structure & Negotiation', tasks:[
+        {id:'t055',label:'Draft LOI with M&A attorney',note:'Do not use a template. Your attorney writes this specific to your deal.',priority:'high'},
+        {id:'t056',label:'Negotiate purchase price based on diligence findings',note:'Adjust from asking price if diligence found issues. Do not pay for unverified numbers.',priority:'high'},
+        {id:'t057',label:'Negotiate seller note terms (amount, rate, term)',note:'Target: 60–70% seller note, 5–7 yr term, 5–7% rate.',priority:'high'},
+        {id:'t058',label:'Negotiate LIMITED personal guarantee cap',note:'Most critical protection. Push for cap at down payment amount only — not unlimited.',priority:'high'},
+        {id:'t059',label:'Negotiate 90–120 day transition period in LOI',note:'Document deliverables. Seller must make client introductions in writing.',priority:'high'},
+        {id:'t060',label:'Negotiate 60–90 day exclusivity period',note:'Seller cannot accept other offers while you complete diligence.',priority:'med'},
+        {id:'t061',label:'Get signed LOI from seller',note:'Milestone. Begin full diligence and legal work immediately.',priority:'high'},
+      ]},
+    ]
+  },
+  {
+    id:'p4', label:'Phase 4', name:'Negotiation & Close',
+    color:'var(--phase4)', timeframe:'Months 14–20 · 20–25 hrs/week',
+    steps:[
+      {id:'s4a', label:'Step 4.1', name:'Purchase Agreement Negotiation', tasks:[
+        {id:'t062',label:'Confirm asset sale structure (not stock/equity sale)',note:'Asset sale protects you from inherited historical liabilities. Push hard for this.',priority:'high'},
+        {id:'t063',label:'Negotiate reps & warranties with indemnification',note:'Seller certifies accuracy. Breach gives you post-close legal recourse.',priority:'high'},
+        {id:'t064',label:'Agree on working capital peg and adjustment mechanism',note:'Protects you if seller drains receivables before closing.',priority:'high'},
+        {id:'t065',label:'Negotiate employee transition terms',note:'Which employees stay? Stay bonuses for critical team members.',priority:'high'},
+        {id:'t066',label:'Finalize client notification plan',note:'Coordinated during transition period — not a mass email on Day 1.',priority:'med'},
+        {id:'t067',label:'Finalize seller note documentation',note:'Promissory note + security agreement + exact personal guarantee language.',priority:'high'},
+        {id:'t068',label:'Attorney final review of complete APA',note:'Do not sign anything your M&A attorney has not reviewed line-by-line.',priority:'high'},
+      ]},
+      {id:'s4b', label:'Step 4.2', name:'Financing & Closing Logistics', tasks:[
+        {id:'t069',label:'Create subsidiary LLC under Angira Ventures',note:'[BusinessName] LLC. Assets transfer into this entity at close.',priority:'high'},
+        {id:'t070',label:'Obtain all insurance policies (effective closing date)',note:'GL + workers comp + professional liability. Cannot close without them.',priority:'high'},
+        {id:'t071',label:'Open business checking account for operating entity',note:'Some banks take 30 days — start early. Do not miss first payroll.',priority:'high'},
+        {id:'t072',label:'Set up payroll service for new entity',note:'Gusto or ADP. First payroll cannot be missed.',priority:'high'},
+        {id:'t073',label:'Confirm license and permit transfers',note:'All required licenses re-issued in new entity name before close.',priority:'high'},
+        {id:'t074',label:'Prepare proof of funds documentation',note:'Bank statement or letter confirming down payment capital.',priority:'med'},
+        {id:'t075',label:'Verify closing wire instructions by phone',note:'CRITICAL: Wire fraud is a real risk. Confirm by phone before sending any funds.',priority:'high'},
+        {id:'t076',label:'Execute closing and fund wire',note:'Keys in hand. You are now a business owner.',priority:'high'},
+      ]},
+    ]
+  },
+  {
+    id:'p5', label:'Phase 5', name:'First 100 Days Post-Close',
+    color:'var(--phase5)', timeframe:'Months 1–3 post-close · 25–30 hrs/week',
+    steps:[
+      {id:'s5a', label:'Step 5.1', name:'Day 1–7: Stabilization', tasks:[
+        {id:'t077',label:'Joint employee announcement with seller (Day 1)',note:'In-person if possible. Tone = continuity. No major changes announced.',priority:'high'},
+        {id:'t078',label:'1-on-1 meetings with every employee (Days 1–2)',note:'Listen more than talk. Ask: "What do I need to know that no one has told me?"',priority:'high'},
+        {id:'t079',label:'Review all outstanding client accounts (Days 2–3)',note:'Who owes money? Any at-risk relationships? Renewals due in 90 days?',priority:'high'},
+        {id:'t080',label:'First private meeting with retained GM/operator (Days 3–5)',note:'Establish authority, communication cadence, and working relationship.',priority:'high'},
+        {id:'t081',label:'First financial reconciliation as owner (Days 5–7)',note:'Bank balance vs. working capital peg. Payroll setup confirmed.',priority:'high'},
+      ]},
+      {id:'s5b', label:'Step 5.2', name:'Days 8–30: Documentation', tasks:[
+        {id:'t082',label:'Document client delivery process end-to-end',note:'From onboarding to invoicing to QA. Written SOP by Day 30.',priority:'high'},
+        {id:'t083',label:'Build client relationship map in CRM',note:'Who at each company? Decision-maker for renewal? Enter for every client.',priority:'high'},
+        {id:'t084',label:'Document all financial processes',note:'Invoicing, payment terms, expense approval, payroll workflow.',priority:'high'},
+        {id:'t085',label:'Obtain admin access to all technology and software',note:'Every tool, email account, website, social profile, cloud service.',priority:'high'},
+        {id:'t086',label:'Introduce yourself to all key vendors in writing',note:'Email from new owner to each critical vendor. Confirm terms and contacts.',priority:'med'},
+        {id:'t087',label:'Day 30: Verify seller has made all client introductions',note:'Every top-20 client introduced by name and in writing. Enforce the transition agreement.',priority:'high'},
+      ]},
+      {id:'s5c', label:'Step 5.3', name:'Days 31–100: Operating Rhythm', tasks:[
+        {id:'t088',label:'Implement weekly GM check-in (30-min standing call)',note:'GM reports on revenue, ops issues, client status. You listen and decide.',priority:'high'},
+        {id:'t089',label:'Set up monthly P&L review process',note:'GM or bookkeeper sends you formatted P&L by 10th of each month.',priority:'high'},
+        {id:'t090',label:'Define and track the 7 core KPIs (from playbook)',note:'MRR, client churn, gross margin, AR days, headcount, note payment, working capital.',priority:'high'},
+        {id:'t091',label:'Day 60: Verify all SOPs are complete',note:'All tribal knowledge documented. Seller has transferred all process knowledge.',priority:'high'},
+        {id:'t092',label:'Establish GM performance bonus structure',note:'Bonus tied to EBITDA improvement + revenue retention. Align incentives.',priority:'med'},
+        {id:'t093',label:'Day 90: Seller transition period complete',note:'Seller fulfills all contractual transition obligations. You own the operating relationship.',priority:'high'},
+      ]},
+    ]
+  },
+  {
+    id:'p6', label:'Phase 6', name:'Operate, Scale & Exit Prep',
+    color:'var(--phase6)', timeframe:'Years 1–7 · 8–15 hrs/week steady state',
+    steps:[
+      {id:'s6a', label:'Step 6.1', name:'Year 1–2: Optimize First Acquisition', tasks:[
+        {id:'t094',label:'Review all client contracts for pricing opportunities',note:'If no rate increase in 2+ years, implement 5–8% increase. Most B2B clients accept.',priority:'high'},
+        {id:'t095',label:'Implement formal client QBR process (quarterly reviews)',note:'Top 10 accounts. Proactive relationship = 30–50% less churn than reactive.',priority:'high'},
+        {id:'t096',label:'Convert any project-based work to recurring contracts',note:'Recurring revenue commands higher exit multiple.',priority:'med'},
+        {id:'t097',label:'Install CRM if not already in place',note:'HubSpot free tier. Track all client relationships, renewals, upsell opportunities.',priority:'med'},
+        {id:'t098',label:'Structure GM equity/profit-sharing incentive plan',note:'A GM who shares in the upside drives growth more aggressively.',priority:'high'},
+        {id:'t099',label:'Re-evaluate SBA eligibility at Month 18',note:'12–24 months of profitable operating history may change your SBA profile.',priority:'med'},
+      ]},
+      {id:'s6b', label:'Step 6.2', name:'Year 2–3: Second Acquisition', tasks:[
+        {id:'t100',label:'Determine second acquisition strategy (bolt-on vs. new vertical)',note:'Bolt-on = same industry different geography. New vertical = complementary B2B.',priority:'med'},
+        {id:'t101',label:'Re-activate deal sourcing infrastructure for Acquisition #2',note:'Use established broker relationships and Apollo outreach.',priority:'med'},
+        {id:'t102',label:'Model second acquisition using the Excel financial model',note:'Use lessons from Acquisition #1 to refine your buy box and assumptions.',priority:'med'},
+        {id:'t103',label:'Explore shared back-office opportunities across entities',note:'Single bookkeeper, shared insurance, combined vendor relationships.',priority:'low'},
+      ]},
+      {id:'s6c', label:'Step 6.3', name:'Year 3–7: Exit Preparation', tasks:[
+        {id:'t104',label:'Engage CPA for GAAP-quality financial statements (Year 4)',note:'Buyers and their lenders require clean, normalized financials — not just tax returns.',priority:'med'},
+        {id:'t105',label:'Reduce customer concentration below 20% per client',note:'Proactively grow other accounts. Buyers discount heavily for concentration risk.',priority:'high'},
+        {id:'t106',label:'Maximize recurring revenue contracts (2 yrs before exit)',note:'Buyers pay a premium for contractual recurring revenue.',priority:'high'},
+        {id:'t107',label:'Engage sell-side M&A advisor (18–24 months before exit)',note:'Investment banker for sub-$20M sale. Runs competitive process. Maximizes valuation.',priority:'med'},
+        {id:'t108',label:'Run competitive sale process targeting 5–7x EBITDA exit',note:'Strategic buyer or roll-up acquirer. Achieve 2033 liquidity target.',priority:'high'},
+      ]},
+    ]
+  }
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let state = {};
+let currentFilter = 'all';
+let expandedPhases = new Set(['p1']);
+
+async function loadState() {
+  try {
+    const r = await window.storage.get(STORAGE_KEY);
+    if (r && r.value) state = JSON.parse(r.value);
+  } catch(e) { state = {}; }
+  // Init missing
+  PHASES.forEach(ph => ph.steps.forEach(st => st.tasks.forEach(t => {
+    if (!state[t.id]) state[t.id] = {status:'not-started', date:'', done:false};
+  })));
+}
+
+async function saveState() {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('save-ind');
+    ind.classList.add('show');
+    setTimeout(() => ind.classList.remove('show'), 2000);
+  } catch(e) {}
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function updateStats() {
+  let total=0, done=0, inProg=0, blocked=0, overdue=0, upcoming=0;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth()+1, 0);
+
+  Object.values(state).forEach(s => {
+    total++;
+    if(s.status==='complete') done++;
+    if(s.status==='in-progress') inProg++;
+    if(s.status==='blocked') blocked++;
+    if(s.date && s.status!=='complete') {
+      const d = new Date(s.date+'T00:00:00');
+      if(d < now) overdue++;
+      else if(d <= monthEnd) upcoming++;
+    }
+  });
+
+  const pct = total ? Math.round(done/total*100) : 0;
+  document.getElementById('pct-display').textContent = pct + '%';
+  document.getElementById('tasks-of').textContent = `${done} of ${total} tasks complete`;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-progress').textContent = inProg;
+  document.getElementById('stat-blocked').textContent = blocked;
+  document.getElementById('stat-overdue').textContent = overdue;
+  document.getElementById('stat-upcoming').textContent = upcoming;
+  document.getElementById('main-progress').style.width = pct + '%';
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderTracker() {
+  const container = document.getElementById('tracker');
+  container.innerHTML = '';
+
+  PHASES.forEach(phase => {
+    const isOpen = expandedPhases.has(phase.id);
+    const phaseTasks = phase.steps.flatMap(s => s.tasks);
+    const done = phaseTasks.filter(t => state[t.id]?.status === 'complete').length;
+    const total = phaseTasks.length;
+
+    const sec = document.createElement('div');
+    sec.className = 'phase-section';
+
+    // Header
+    const hdr = document.createElement('div');
+    hdr.className = 'phase-header';
+    hdr.style.background = phase.color;
+    hdr.innerHTML = `
+      <div class="phase-pip" style="background:rgba(255,255,255,0.5)"></div>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:2px">${phase.label} · ${phase.timeframe}</div>
+        <div class="phase-name">${phase.name}</div>
+      </div>
+      <div class="phase-progress">${done}/${total}</div>
+      <div class="phase-chevron ${isOpen?'open':''}">▼</div>
+    `;
+    hdr.onclick = () => {
+      if(expandedPhases.has(phase.id)) expandedPhases.delete(phase.id);
+      else expandedPhases.add(phase.id);
+      renderTracker();
+    };
+
+    sec.appendChild(hdr);
+
+    if(isOpen) {
+      const body = document.createElement('div');
+      body.className = 'phase-body';
+
+      phase.steps.forEach(step => {
+        // Filter tasks
+        const visibleTasks = step.tasks.filter(t => {
+          const s = state[t.id] || {};
+          const now = new Date(); now.setHours(0,0,0,0);
+          if(currentFilter === 'all') return true;
+          if(currentFilter === 'complete') return s.status === 'complete';
+          if(currentFilter === 'in-progress') return s.status === 'in-progress';
+          if(currentFilter === 'not-started') return s.status === 'not-started';
+          if(currentFilter === 'blocked') return s.status === 'blocked';
+          if(currentFilter === 'overdue') {
+            if(!s.date || s.status === 'complete') return false;
+            return new Date(s.date+'T00:00:00') < now;
+          }
+          return true;
+        });
+
+        if(visibleTasks.length === 0) return;
+
+        const stepDiv = document.createElement('div');
+        stepDiv.className = 'step-group';
+
+        const stepHdr = document.createElement('div');
+        stepHdr.className = 'step-header';
+        const doneCount = step.tasks.filter(t => state[t.id]?.status === 'complete').length;
+        stepHdr.innerHTML = `
+          <span class="step-num">${step.label}</span>
+          <span>${step.name}</span>
+          <span class="step-count">${doneCount}/${step.tasks.length}</span>
+        `;
+        stepDiv.appendChild(stepHdr);
+
+        visibleTasks.forEach(task => {
+          const s = state[task.id] || {status:'not-started',date:'',done:false};
+          const now = new Date(); now.setHours(0,0,0,0);
+          const isOverdue = s.date && s.status !== 'complete' && new Date(s.date+'T00:00:00') < now;
+          const isDone = s.status === 'complete';
+
+          const row = document.createElement('div');
+          row.className = `task-row ${isDone?'done':''} ${isOverdue?'overdue':''}`;
+
+          // Checkbox
+          const chk = document.createElement('div');
+          chk.className = `task-check ${isDone?'checked':''}`;
+          chk.title = isDone ? 'Mark incomplete' : 'Mark complete';
+          chk.onclick = () => {
+            state[task.id].status = isDone ? 'not-started' : 'complete';
+            state[task.id].done = !isDone;
+            saveState();
+            updateStats();
+            renderTracker();
+          };
+
+          // Content
+          const content = document.createElement('div');
+          content.className = 'task-content';
+          content.innerHTML = `
+            <div class="task-label">${task.label}</div>
+            ${task.note ? `<div class="task-note">${task.note}</div>` : ''}
+          `;
+
+          // Date
+          const dateWrap = document.createElement('div');
+          dateWrap.className = 'date-wrap';
+          dateWrap.innerHTML = `<div class="date-label">Target Date</div>`;
+          const dateInput = document.createElement('input');
+          dateInput.type = 'date';
+          dateInput.className = 'task-date';
+          if(isOverdue) dateInput.style.borderColor = 'var(--red)';
+          dateInput.value = s.date || '';
+          dateInput.onchange = (e) => {
+            state[task.id].date = e.target.value;
+            saveState();
+            updateStats();
+            renderTracker();
+          };
+          dateWrap.appendChild(dateInput);
+
+          // Status
+          const statusSel = document.createElement('select');
+          statusSel.className = 'status-select';
+          const statuses = [
+            {val:'not-started',label:'Not Started'},
+            {val:'in-progress',label:'In Progress'},
+            {val:'complete',label:'Complete'},
+            {val:'blocked',label:'Blocked'},
+          ];
+          statuses.forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt.val; o.textContent = opt.label;
+            if(s.status === opt.val) o.selected = true;
+            statusSel.appendChild(o);
+          });
+          statusSel.className = `status-select status-${s.status.replace('-','_').replace('-','_')}`;
+          // apply color classes
+          const colorMap = {'not-started':'status-not-started','in-progress':'status-in-progress','complete':'status-complete','blocked':'status-blocked'};
+          statusSel.className = `status-select ${colorMap[s.status]||''}`;
+          statusSel.onchange = (e) => {
+            state[task.id].status = e.target.value;
+            state[task.id].done = e.target.value === 'complete';
+            const cm = {'not-started':'status-not-started','in-progress':'status-in-progress','complete':'status-complete','blocked':'status-blocked'};
+            statusSel.className = `status-select ${cm[e.target.value]||''}`;
+            saveState();
+            updateStats();
+            renderTracker();
+          };
+
+          // Priority
+          const priDiv = document.createElement('div');
+          priDiv.className = `priority-dot p-${task.priority}`;
+          priDiv.title = `Priority: ${task.priority}`;
+
+          row.appendChild(chk);
+          row.appendChild(content);
+          row.appendChild(dateWrap);
+          row.appendChild(statusSel);
+          row.appendChild(priDiv);
+          stepDiv.appendChild(row);
+        });
+
+        body.appendChild(stepDiv);
+      });
+
+      if(body.children.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-msg';
+        empty.textContent = 'No tasks match the current filter in this phase.';
+        body.appendChild(empty);
+      }
+
+      sec.appendChild(body);
+    }
+
+    container.appendChild(sec);
+  });
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTracker();
+}
+
+function confirmReset() {
+  if(confirm('Reset all tasks to "Not Started" and clear all dates? This cannot be undone.')) {
+    state = {};
+    PHASES.forEach(ph => ph.steps.forEach(st => st.tasks.forEach(t => {
+      state[t.id] = {status:'not-started', date:'', done:false};
+    })));
+    saveState();
+    updateStats();
+    renderTracker();
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  await loadState();
+  updateStats();
+  renderTracker();
+})();
+</script>
+</body>
+</html>
