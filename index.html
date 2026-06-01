@@ -409,7 +409,11 @@ const PH = [
 // ── STATE ─────────────────────────────────────────────────────────────────────
 let ST = {}, filt = 'all', openP = new Set(['p1']), closedS = new Set();
 let db = null, saveTimer = null, unsubscribe = null;
-const CFG_KEY = 'angira_fb_cfg';
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDokmJXZ-V5X6KF9x2Q-_nxnG0cQRQrdic",
+  projectId: "angira-eta",
+  appId: "1:627476575992:web:cc3a4c855517087a9e6d0d"
+};
 const DOC_PATH = 'tracker/state';
 const CHECK_SVG = `<svg viewBox="0 0 14 14"><polyline points="2,7 6,11 12,3"/></svg>`;
 
@@ -433,9 +437,9 @@ function showSetup() {
 }
 
 window.connectFirebase = async function() {
-  const apiKey = document.getElementById('cfg-apikey').value.trim();
-  const projectId = document.getElementById('cfg-projectid').value.trim();
-  const appId = document.getElementById('cfg-appid').value.trim();
+ const apiKey = FIREBASE_CONFIG.apiKey;
+const projectId = FIREBASE_CONFIG.projectId;
+const appId = FIREBASE_CONFIG.appId;
   const errEl = document.getElementById('setup-err');
   errEl.style.display = 'none';
 
@@ -660,15 +664,7 @@ upd();
 render();
 
 // Auto-connect if config exists
-const saved = JSON.parse(localStorage.getItem(CFG_KEY) || '{}');
-if (saved.apiKey && saved.projectId && saved.appId) {
-  document.getElementById('cfg-apikey').value = saved.apiKey;
-  document.getElementById('cfg-projectid').value = saved.projectId;
-  document.getElementById('cfg-appid').value = saved.appId;
-  connectFirebase();
-} else {
-  showSetup();
-}
+connectFirebase();
 </script>
 </body>
 </html>
